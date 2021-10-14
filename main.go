@@ -34,7 +34,8 @@ func getStudentInfo() (name, roll, course string) {
 }
 
 //Main
-func main() {
+func main()
+{
 	name, roll, course := getStudentInfo()
 
 	file, err := os.Create("attendance.txt")
