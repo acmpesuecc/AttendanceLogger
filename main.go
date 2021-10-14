@@ -35,6 +35,9 @@ func getStudentInfo() (name, roll, course string) {
 
 //Main
 func main() {
+
+	fmt.Println("Welcome to Attendance Logger!")
+
 	name, roll, course := getStudentInfo()
 
 	file, err := os.Create("attendance.txt")
