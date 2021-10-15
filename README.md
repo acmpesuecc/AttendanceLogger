@@ -8,6 +8,7 @@ A Simple Go program to Log Attendance!
 1. Make sure you have go [installed](https://golang.org/doc/install).
 2. Clone and navigate to this repository
 3. Enter `go run main.go` in your command line
+4. Make sure you change the attendance.csv file path to your own on main.go
 ## How do I contribute?
 Check out the Contributing Guidelines to learn more!
 
