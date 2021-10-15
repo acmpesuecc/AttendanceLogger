@@ -3,7 +3,9 @@ package main
 //Import packages
 import (
 	"bufio"
+	"encoding/csv"
 	"fmt"
+	"io"
 	"log"
 	"os"
 )
@@ -33,35 +35,92 @@ func getStudentInfo() (name, roll, course string) {
 	return name, roll, course
 }
 
+// function to view attendance
+func viewStudentInfo() {
+	fmt.Println("Viewing student info")
+	recordFile, err := os.Open("attendance.csv")
+	if err != nil {
+		fmt.Println("An error encountered ::", err)
+		return
+	}
+
+	// Setup the reader
+	reader := csv.NewReader(recordFile)
+
+	// Read the records
+	header, err := reader.Read()
+	if err != nil {
+		fmt.Println("An error encountered ::", err)
+		return
+	}
+	fmt.Printf("%v ", header)
+	fmt.Println()
+
+	for i := 0; ; i = i + 1 {
+		record, err := reader.Read()
+		if err == io.EOF {
+			break // reached end of the file
+		} else if err != nil {
+			fmt.Println("An error encountered ::", err)
+			return
+		}
+		fmt.Printf("%v ", record)
+		fmt.Println()
+	}
+
+}
+
+//function to reset all information on the given csv file
+func resetStudentInfo() {
+	fmt.Println("Resetting student info")
+	if err := os.Truncate("/home/johnjj/Documents/hacknight_forks/AttendanceLogger/attendance.csv", 0); err != nil {
+		log.Printf("Failed to truncate: %v", err)
+	}
+
+}
+
 //Main
 func main() {
-	name, roll, course := getStudentInfo()
+	fmt.Println("Welcome to the Attendance Logger")
+	fmt.Println("Enter 1 to log attendance")
+	fmt.Println("Enter 2 to view attendance")
+	fmt.Println("Enter 3 to reset attendance")
 
-	file, err := os.Create("attendance.txt")
-	if err != nil {
-		errorHandler(err)
-		log.Fatalf("%s", err)
-	}
+	var input int
+	fmt.Scanf("%d", &input)
 
-	defer file.Close()
+	if input == 1 {
+		name, roll, course := getStudentInfo()
+		recordFile, err := os.OpenFile("/home/johnjj/Documents/hacknight_forks/AttendanceLogger/attendance.csv", os.O_APPEND|os.O_WRONLY, os.ModeAppend)
+		if err != nil {
+			errorHandler(err)
+			log.Fatalf("%s", err)
+		}
+		defer recordFile.Close()
 
-	_, err2 := file.WriteString(name)
-	_, err3 := file.WriteString(roll)
-	_, err4 := file.WriteString(course)
+		writer := csv.NewWriter(recordFile)
+		var csvData = [][]string{
+			{name, roll, course},
+		}
+		err = writer.WriteAll(csvData)
+		if err != nil {
+			fmt.Println("Error while writing to the file ::", err)
+			return
+		}
+		fmt.Println("Succesfully added")
+		err = recordFile.Close()
+		if err != nil {
+			fmt.Println("Error while closing the file ::", err)
+			return
+		}
 
-	if err2 != nil {
-		errorHandler(err2)
-		log.Fatalf("%s", err2)
-	}
+	} else if input == 2 {
+		viewStudentInfo()
 
-	if err3 != nil {
-		errorHandler(err3)
-		log.Fatalf("%s", err3)
-	}
-
-	if err4 != nil {
-		errorHandler(err4)
-		log.Fatalf("%s", err4)
+	} else if input == 3 {
+		resetStudentInfo()
+	} else {
+		fmt.Println("Invalid input, try again.")
 	}
 
 }

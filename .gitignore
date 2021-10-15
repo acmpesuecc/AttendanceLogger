@@ -1,5 +1,6 @@
 # The output file
 attendance.txt
+attendance.csv
 
 # Binaries for programs and plugins
 *.exe
