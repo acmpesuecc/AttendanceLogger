@@ -92,7 +92,8 @@ func getStudentInfo() (normtime, epochtime, name, roll, course string) {
 
 //Main
 func main() {
-	
+	var option string
+	for true{
 	fmt.Println("Type \n")
 	fmt.Println("1 to view attendance")
 	fmt.Println("2 to log attendance")
@@ -130,7 +131,14 @@ func main() {
 		case 3:
 			resetAttendance()
 	}
-	
-	
-	
+	fmt.Println("Type next to log another student's attendance or exit to quit:")
+	fmt.Scanln(&option)
+	if option == "exit"{
+		break
+	}
+	else{
+		continue
+	}
+}
+	fmt.Println("Thank you")
 }
