@@ -1,6 +1,5 @@
 package main
 
-//Import packages
 import (
 	"bufio"
 	"encoding/csv"
@@ -11,21 +10,21 @@ import (
 	"time"
 )
 
-//Funtion for logging errors
+// Funtion for logging errors
 func errorHandler(err error) {
 	println("Ops, something went wrong:", err)
 }
 
 //Function to get attendance
 
-
-
 func viewAttendance() {
+	println()
 	println("This will show you attendance")
-	
+
 	if _, err := os.Stat("attendance.txt"); os.IsNotExist(err) {
 		println("No attendance to show")
-	} else{
+		println()
+	} else {
 		file, err := os.Open("attendance.txt")
 		if err != nil {
 			errorHandler(err)
@@ -45,32 +44,34 @@ func viewAttendance() {
 
 	}
 
+}
 
-}	
-
-func resetAttendance(){
+func resetAttendance() {
+	println()
 	println("This will reset attendance")
-	
+
 	if _, err := os.Stat("attendance.txt"); os.IsNotExist(err) {
 		println("Attendance already clear")
-	} else{
+		println()
+	} else {
 		e := os.Remove("attendance.txt")
 		if e != nil {
 			errorHandler(e)
 			log.Fatal(e)
-		} else{
+		} else {
 			println("Attendance Cleared")
+			println()
 		}
 	}
 }
 
 func getStudentInfo() (normtime, epochtime, name, roll, course string) {
-	now:= time.Now()
+	now := time.Now()
 	fmt.Println("Time: ", now.Local(), "\n")
-	epoch:=now.Unix()
-	norm:=now.Local()
-	epochtime=fmt.Sprint(epoch)
-	normtime=fmt.Sprint(norm)
+	epoch := now.Unix()
+	norm := now.Local()
+	epochtime = fmt.Sprint(epoch)
+	normtime = fmt.Sprint(norm)
 	fmt.Println("Enter the student name:")
 
 	inputReader := bufio.NewReader(os.Stdin)
@@ -90,19 +91,25 @@ func getStudentInfo() (normtime, epochtime, name, roll, course string) {
 
 }
 
-//Main
+// Main
 func main() {
-	
-	fmt.Println("Type \n")
-	fmt.Println("1 to view attendance")
-	fmt.Println("2 to log attendance")
-	fmt.Println("3 to reset attendance")
-	
-	var option int
-	
-	fmt.Scanln(&option)
-	
-	switch option {
+
+	// Looping until user enters -1
+	for {
+		fmt.Println()
+		fmt.Println("===========================")
+		fmt.Println("Type \n")
+		fmt.Println("1 to view attendance")
+		fmt.Println("2 to log attendance")
+		fmt.Println("3 to reset attendance")
+		fmt.Println("-1 to exit the program")
+		fmt.Println("===========================")
+		fmt.Println()
+		var option int
+
+		fmt.Scanln(&option)
+
+		switch option {
 		case 1:
 			viewAttendance()
 		case 2:
@@ -113,7 +120,6 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-	
 
 			w := csv.NewWriter(file)
 
@@ -129,8 +135,11 @@ func main() {
 			}
 		case 3:
 			resetAttendance()
+		case -1:
+			fmt.Println("Exiting the program...")
+			return
+		default:
+			fmt.Println("Invalid option")
+		}
 	}
-	
-	
-	
 }
