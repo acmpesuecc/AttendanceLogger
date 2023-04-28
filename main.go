@@ -2,12 +2,16 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/csv"
 	"fmt"
 	"log"
 	"os"
 	"strings"
 	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // Funtion for logging errors
@@ -46,21 +50,23 @@ func viewAttendance() {
 
 }
 
-func resetAttendance() {
-	println()
+func resetAttendance(collection *mongo.Collection) {
 	println("This will reset attendance")
 
 	if _, err := os.Stat("attendance.txt"); os.IsNotExist(err) {
 		println("Attendance already clear")
-		println()
 	} else {
 		e := os.Remove("attendance.txt")
 		if e != nil {
 			errorHandler(e)
 			log.Fatal(e)
 		} else {
-			println("Attendance Cleared")
-			println()
+			err := collection.Drop(context.TODO())
+			if err != nil {
+				errorHandler(err)
+				log.Fatal(err)
+			}
+			println("Attendance Collection Dropped")
 		}
 	}
 }
@@ -93,8 +99,14 @@ func getStudentInfo() (normtime, epochtime, name, roll, course string) {
 
 // Main
 func main() {
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		log.Fatal("Failed to connect to MongoDB", err)
 
-	// Looping until user enters -1
+	}
+	defer client.Disconnect(context.TODO())
+	collection := client.Database("Attendance").Collection("attendance")
 	for {
 		fmt.Println()
 		fmt.Println("===========================")
@@ -102,7 +114,7 @@ func main() {
 		fmt.Println("1 to view attendance")
 		fmt.Println("2 to log attendance")
 		fmt.Println("3 to reset attendance")
-		fmt.Println("-1 to exit the program")
+		fmt.Println("4 to exit")
 		fmt.Println("===========================")
 		fmt.Println()
 		var option int
@@ -115,7 +127,17 @@ func main() {
 		case 2:
 			normtime, epochtime, name, roll, course := getStudentInfo()
 			record := []string{normtime, epochtime, name, roll, course}
-
+			_, err := collection.InsertOne(context.TODO(), map[string]string{
+				"normtime":  normtime,
+				"epochtime": epochtime,
+				"name":      name,
+				"roll":      roll,
+				"course":    course,
+			})
+			if err != nil {
+				errorHandler(err)
+				log.Fatal(err)
+			}
 			file, err := os.OpenFile("attendance.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 			if err != nil {
 				panic(err)
@@ -134,7 +156,10 @@ func main() {
 				log.Fatalf("%s", err)
 			}
 		case 3:
-			resetAttendance()
+			resetAttendance(collection)
+		case 4:
+			fmt.Println("Exiting the program...")
+			return
 		case -1:
 			fmt.Println("Exiting the program...")
 			return
