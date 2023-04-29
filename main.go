@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -16,16 +17,14 @@ func errorHandler(err error) {
 	println("Ops, something went wrong:", err)
 }
 
-//Function to get attendance
-
-
-
+//Function to get view attendance
+//Function to get view attendance
 func viewAttendance() {
-	println("This will show you attendance")
-	
+	fmt.Println("This will show you attendance:")
+
 	if _, err := os.Stat("attendance.txt"); os.IsNotExist(err) {
-		println("No attendance to show")
-	} else{
+		fmt.Println("No attendance to show")
+	} else {
 		file, err := os.Open("attendance.txt")
 		if err != nil {
 			errorHandler(err)
@@ -35,19 +34,25 @@ func viewAttendance() {
 
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
-			fmt.Println(scanner.Text())
+			line := scanner.Text()
+			fields := strings.Split(line, ",")
+			dateTime := fields[0]
+			name := fields[2]
+			id := fields[3]
+			branch := fields[4]
+			fmt.Printf("Date: %s | Name: %-15s | ID: %s | Branch: %s\n" , dateTime[:10], name, id, branch)
+			// dateTime[:10] extracts only the date part from the dateTime string
 		}
 
 		if err := scanner.Err(); err != nil {
 			errorHandler(err)
 			log.Fatal(err)
 		}
-
 	}
+}
 
-
-}	
-
+	
+// Function to reset attendance
 func resetAttendance(){
 	println("This will reset attendance")
 	
@@ -63,40 +68,52 @@ func resetAttendance(){
 		}
 	}
 }
-
+//Function to get attendance information
 func getStudentInfo() (normtime, epochtime, name, roll, course string) {
-	now:= time.Now()
-	fmt.Println("Time: ", now.Local(), "\n")
-	epoch:=now.Unix()
-	norm:=now.Local()
-	epochtime=fmt.Sprint(epoch)
-	normtime=fmt.Sprint(norm)
-	fmt.Println("Enter the student name:")
+	now := time.Now()
+	epoch := now.Unix()
+	norm := now.Local()
+	epochtime = fmt.Sprint(epoch)
+	normtime = fmt.Sprint(norm)
 
-	inputReader := bufio.NewReader(os.Stdin)
-	name, _ = inputReader.ReadString('\n')
+	pattern := `PES[12]UG[0129]{2}[CE][SC]\d{3}`
 
-	fmt.Println("Enter the student roll number:")
+	// Loop until valid roll number is entered
+	for {
+		fmt.Println("Enter the student name:")
+		inputReader := bufio.NewReader(os.Stdin)
+		name, _ = inputReader.ReadString('\n')
 
-	inputReader = bufio.NewReader(os.Stdin)
-	roll, _ = inputReader.ReadString('\n')
+		fmt.Println("Enter the student roll number:")
+		inputReader = bufio.NewReader(os.Stdin)
+		roll, _ = inputReader.ReadString('\n')
+
+		// Validate roll number using regular expression
+		matcher := regexp.MustCompile(pattern);
+		matched := matcher.MatchString(roll)
+
+		if matched {
+			break // Exit loop if valid roll number is entered
+		} else {
+			fmt.Println("Invalid roll number. Roll number should be of the form", pattern)
+		}
+	}
 
 	fmt.Println("Enter the course:")
-
-	inputReader = bufio.NewReader(os.Stdin)
+	inputReader := bufio.NewReader(os.Stdin) // Declare inputReader again
 	course, _ = inputReader.ReadString('\n')
 
 	return strings.TrimSpace(normtime), strings.TrimSpace(epochtime), strings.TrimSpace(name), strings.TrimSpace(roll), strings.TrimSpace(course)
-
 }
+
 
 //Main
 func main() {
 	
-	fmt.Println("Type \n")
-	fmt.Println("1 to view attendance")
-	fmt.Println("2 to log attendance")
-	fmt.Println("3 to reset attendance")
+	fmt.Println("Type: \n")
+	fmt.Println("'1' to View Attendance")
+	fmt.Println("'2' to Log Attendance")
+	fmt.Println("'3' to Reset Attendance")
 	
 	var option int
 	
