@@ -92,11 +92,14 @@ func getStudentInfo() (normtime, epochtime, name, roll, course string) {
 
 //Main
 func main() {
-	
-	fmt.Println("Type \n")
+	var flag int
+	flag=1
+	for {
+
+	fmt.Println("\nType")
 	fmt.Println("1 to view attendance")
 	fmt.Println("2 to log attendance")
-	fmt.Println("3 to reset attendance")
+	fmt.Println("3 to reset attendance\n")
 	
 	var option int
 	
@@ -129,8 +132,22 @@ func main() {
 			}
 		case 3:
 			resetAttendance()
-	}
-	
-	
-	
+	   }
+	   
+	   fmt.Println("\ndo you still want to continue  \n1.yes   \n2.false")  
+	   fmt.Scanln(&flag)
+
+	   if flag==0 {
+		fmt.Println("exiting the programme")
+		break
+
+      }else if flag==1{
+		continue
+	  }else{
+
+	  fmt.Println("\nplease enter a valid choice")
+	  fmt.Println("do you still want to continue  \n1.yes   \n2.false")  
+	  fmt.Scanln(&flag)
+	  }
+	}		
 }
