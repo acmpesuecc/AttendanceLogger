@@ -76,6 +76,9 @@ func retrieveStudent(db *sql.DB, name, subject string) (*student, error) {
 func main() {
 	connectSQL()
 
+=======
+	var opt string
+	for true{
 	fmt.Println("Type \n")
 	fmt.Println("1 to log attendance")
 
@@ -116,4 +119,12 @@ func main() {
 			log.Fatalf("%s", err)
 		}
 	}
+=======
+	fmt.Println("Type next to log another student's attendance or exit to quit:")
+	fmt.Scanln(&opt)
+	if opt == "exit"{
+		break
+	}
 }
+  fmt.Println("Thank you")
+  }
