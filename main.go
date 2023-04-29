@@ -1,136 +1,125 @@
+// The sql database currently only hold the SRN, Name and Subject.
 package main
 
-//Import packages
 import (
 	"bufio"
+	"database/sql"
 	"encoding/csv"
 	"fmt"
 	"log"
 	"os"
 	"strings"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
-//Funtion for logging errors
+// Function to connect to SQL
+var db *sql.DB
+
+func connectSQL() {
+	var err error
+	db, err = sql.Open("mysql", "root:TaNaY6969	@tcp(127.0.0.1:3306)/Student") //use local user pwd
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	// defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Connected to MySQL!")
+}
+
+// Function for logging errors
 func errorHandler(err error) {
 	println("Ops, something went wrong:", err)
 }
 
-//Function to get attendance
-
-
-
-func viewAttendance() {
-	println("This will show you attendance")
-	
-	if _, err := os.Stat("attendance.txt"); os.IsNotExist(err) {
-		println("No attendance to show")
-	} else{
-		file, err := os.Open("attendance.txt")
-		if err != nil {
-			errorHandler(err)
-			log.Fatal(err)
-		}
-		defer file.Close()
-
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			fmt.Println(scanner.Text())
-		}
-
-		if err := scanner.Err(); err != nil {
-			errorHandler(err)
-			log.Fatal(err)
-		}
-
-	}
-
-
-}	
-
-func resetAttendance(){
-	println("This will reset attendance")
-	
-	if _, err := os.Stat("attendance.txt"); os.IsNotExist(err) {
-		println("Attendance already clear")
-	} else{
-		e := os.Remove("attendance.txt")
-		if e != nil {
-			errorHandler(e)
-			log.Fatal(e)
-		} else{
-			println("Attendance Cleared")
-		}
-	}
-}
-
-func getStudentInfo() (normtime, epochtime, name, roll, course string) {
-	now:= time.Now()
-	fmt.Println("Time: ", now.Local(), "\n")
-	epoch:=now.Unix()
-	norm:=now.Local()
-	epochtime=fmt.Sprint(epoch)
-	normtime=fmt.Sprint(norm)
+// Function to get student info
+func getStudentInfo() (name, subject string) {
 	fmt.Println("Enter the student name:")
 
 	inputReader := bufio.NewReader(os.Stdin)
 	name, _ = inputReader.ReadString('\n')
 
-	fmt.Println("Enter the student roll number:")
+	fmt.Println("Enter the subject:")
 
 	inputReader = bufio.NewReader(os.Stdin)
-	roll, _ = inputReader.ReadString('\n')
+	subject, _ = inputReader.ReadString('\n')
 
-	fmt.Println("Enter the course:")
-
-	inputReader = bufio.NewReader(os.Stdin)
-	course, _ = inputReader.ReadString('\n')
-
-	return strings.TrimSpace(normtime), strings.TrimSpace(epochtime), strings.TrimSpace(name), strings.TrimSpace(roll), strings.TrimSpace(course)
-
+	return strings.TrimSpace(name), strings.TrimSpace(subject)
 }
 
-//Main
+type student struct {
+	SRN     string
+	Name    string
+	Subject string
+}
+
+//Retrieve data from the Database
+
+func retrieveStudent(db *sql.DB, name, subject string) (*student, error) {
+	var s student
+	query := "SELECT SRN, Names FROM student WHERE Names = ? AND Subject = ? LIMIT 1"
+	err := db.QueryRow(query, name, subject).Scan(&s.SRN, &s.Name)
+	if err != nil {
+		return nil, err
+	}
+	s.Subject = subject
+	return &s, nil
+}
+
+// Main function
 func main() {
+	connectSQL()
+
+=======
 	var opt string
 	for true{
 	fmt.Println("Type \n")
-	fmt.Println("1 to view attendance")
-	fmt.Println("2 to log attendance")
-	fmt.Println("3 to reset attendance")
-	
+	fmt.Println("1 to log attendance")
+
 	var option int
-	
+
 	fmt.Scanln(&option)
-	
+
 	switch option {
-		case 1:
-			viewAttendance()
-		case 2:
-			normtime, epochtime, name, roll, course := getStudentInfo()
-			record := []string{normtime, epochtime, name, roll, course}
+	case 1:
+		name, subject := getStudentInfo()
+		s, err := retrieveStudent(db, name, subject)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("SRN: ", s.SRN)
+		fmt.Println("Name: ", s.Name)
+		fmt.Println("Subject: ", s.Subject)
 
-			file, err := os.OpenFile("attendance.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-			if err != nil {
-				panic(err)
-			}
-	
+		normtime := time.Now().Format("2006-01-02 15:04:05")
+		epochtime := fmt.Sprintf("%d", time.Now().Unix())
+		record := []string{normtime, epochtime, name, s.SRN, subject}
 
-			w := csv.NewWriter(file)
+		file, err := os.OpenFile("attendance.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+		if err != nil {
+			panic(err)
+		}
 
-			defer file.Close()
+		w := csv.NewWriter(file)
 
-			w.Write(record)
-			w.Flush()
-			err = w.Error()
+		defer file.Close()
 
-			if err != nil {
-				errorHandler(err)
-				log.Fatalf("%s", err)
-			}
-		case 3:
-			resetAttendance()
+		w.Write(record)
+		w.Flush()
+		err = w.Error()
+
+		if err != nil {
+			errorHandler(err)
+			log.Fatalf("%s", err)
+		}
 	}
+=======
 	fmt.Println("Type next to log another student's attendance or exit to quit:")
 	fmt.Scanln(&opt)
 	if opt == "exit"{
