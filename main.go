@@ -92,6 +92,31 @@ func getStudentInfo() (normtime, epochtime, name, roll, course string) {
 
 	return strings.TrimSpace(normtime), strings.TrimSpace(epochtime), strings.TrimSpace(name), strings.TrimSpace(roll), strings.TrimSpace(course)
 }
+func displayCourseInfo(collection *mongo.Collection) {
+	fmt.Println("Enter the course name:")
+	inputReader := bufio.NewReader(os.Stdin)
+	courseName, _ := inputReader.ReadString('\n')
+	courseName = strings.TrimSpace(courseName)
+
+	filter := bson.M{"course": courseName}
+	cur, err := collection.Find(context.Background(), filter)
+	if err != nil {
+		errorHandler(err)
+		log.Fatal(err)
+	}
+	defer cur.Close(context.Background())
+
+	var students []bson.M
+	if err := cur.All(context.Background(), &students); err != nil {
+		errorHandler(err)
+		log.Fatal(err)
+	}
+
+	fmt.Println("Total students in the course:", len(students))
+	for _, student := range students {
+		fmt.Println(student["name"])
+	}
+}
 
 // Main
 func main() {
@@ -110,7 +135,8 @@ func main() {
 		fmt.Println("1 to view attendance")
 		fmt.Println("2 to log attendance")
 		fmt.Println("3 to reset attendance")
-		fmt.Println("4 to exit")
+		fmt.Println("4 to check number of students per course")
+		fmt.Println("5 to exit")
 		fmt.Println("===========================")
 		fmt.Println()
 
@@ -165,6 +191,9 @@ func main() {
 			}
 			fmt.Println("Attendance Collection Dropped")
 		case 4:
+			displayCourseInfo(collection)
+
+		case 5:
 			fmt.Println("Exited the program...")
 			return
 		case -1:
